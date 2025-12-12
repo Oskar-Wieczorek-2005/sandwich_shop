@@ -1,23 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sandwich_shop/views/app_styles.dart';
 import 'package:sandwich_shop/models/cart.dart';
 import 'package:sandwich_shop/models/sandwich.dart';
 import 'package:sandwich_shop/repositories/pricing_repository.dart';
+import 'package:sandwich_shop/views/app_styles.dart';
 import 'package:sandwich_shop/views/checkout_screen.dart';
-import 'package:sandwich_shop/views/styled_button.dart'; // <-- add this import
+import 'package:sandwich_shop/views/common_widgets.dart';
+import 'package:sandwich_shop/views/styled_button.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
   @override
-  State<CartScreen> createState() {
-    return _CartScreenState();
+  Widget build(BuildContext context) {
+    return StandardScaffold(
+      title: 'Cart',
+      body: Center(
+        child: SingleChildScrollView(
+          child: Consumer<Cart>(
+            builder: (context, cart, child) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  if (cart.items.isEmpty)
+                    const Text(
+                      'Your cart is empty.',
+                      style: heading2,
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    for (MapEntry<Sandwich, int> entry in cart.items.entries)
+                      Column(
+                        children: [
+                          Text(entry.key.name, style: heading2),
+                          Text(
+                            '${_getSizeText(entry.key.isFootlong)} on ${entry.key.breadType.name} bread',
+                            style: normalText,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove),
+                                onPressed: () =>
+                                    _decrementQuantity(context, entry.key),
+                              ),
+                              Text(
+                                'Qty: ${entry.value}',
+                                style: normalText,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () =>
+                                    _incrementQuantity(context, entry.key),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                '£${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
+                                style: normalText,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                tooltip: 'Remove item',
+                                onPressed: () =>
+                                    _removeItem(context, entry.key),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                  Text(
+                    'Total: £${cart.totalPrice.toStringAsFixed(2)}',
+                    style: heading2,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Builder(
+                    builder: (BuildContext innerContext) {
+                      final bool cartHasItems = cart.items.isNotEmpty;
+                      if (cartHasItems) {
+                        return StyledButton(
+                          onPressed: () => _navigateToCheckout(innerContext),
+                          icon: Icons.payment,
+                          label: 'Checkout',
+                          backgroundColor: Colors.orange,
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  StyledButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icons.arrow_back,
+                    label: 'Back to Order',
+                    backgroundColor: Colors.grey,
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
-}
 
-class _CartScreenState extends State<CartScreen> {
-  Future<void> _navigateToCheckout() async {
+  Future<void> _navigateToCheckout(BuildContext context) async {
     final Cart cart = Provider.of<Cart>(context, listen: false);
 
     if (cart.items.isEmpty) {
@@ -37,7 +129,7 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
 
-    if (result != null && mounted) {
+    if (result != null && context.mounted) {
       cart.clear();
 
       final String orderId = result['orderId'] as String;
@@ -72,7 +164,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _incrementQuantity(Sandwich sandwich) {
+  void _incrementQuantity(BuildContext context, Sandwich sandwich) {
     final Cart cart = Provider.of<Cart>(context, listen: false);
     cart.add(sandwich, quantity: 1);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +172,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _decrementQuantity(Sandwich sandwich) {
+  void _decrementQuantity(BuildContext context, Sandwich sandwich) {
     final Cart cart = Provider.of<Cart>(context, listen: false);
     final wasPresent = cart.items.containsKey(sandwich);
     cart.remove(sandwich, quantity: 1);
@@ -95,135 +187,11 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void _removeItem(Sandwich sandwich) {
+  void _removeItem(BuildContext context, Sandwich sandwich) {
     final Cart cart = Provider.of<Cart>(context, listen: false);
     cart.remove(sandwich, quantity: cart.getQuantity(sandwich));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Item removed from cart')),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SizedBox(
-            height: 100,
-            child: Image.asset('assets/images/logo.png'),
-          ),
-        ),
-        title: const Text(
-          'Cart View',
-          style: heading1,
-        ),
-        actions: [
-          Consumer<Cart>(
-            builder: (context, cart, child) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.shopping_cart),
-                    const SizedBox(width: 4),
-                    Text('${cart.countOfItems}'),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Consumer<Cart>(
-            builder: (context, cart, child) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  if (cart.items.isEmpty)
-                    const Text(
-                      'Your cart is empty.',
-                      style: heading2,
-                      textAlign: TextAlign.center,
-                    )
-                  else
-                    for (MapEntry<Sandwich, int> entry in cart.items.entries)
-                      Column(
-                        children: [
-                          Text(entry.key.name, style: heading2),
-                          Text(
-                            '${_getSizeText(entry.key.isFootlong)} on ${entry.key.breadType.name} bread',
-                            style: normalText,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove),
-                                onPressed: () => _decrementQuantity(entry.key),
-                              ),
-                              Text(
-                                'Qty: ${entry.value}',
-                                style: normalText,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () => _incrementQuantity(entry.key),
-                              ),
-                              const SizedBox(width: 16),
-                              Text(
-                                '£${_getItemPrice(entry.key, entry.value).toStringAsFixed(2)}',
-                                style: normalText,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                tooltip: 'Remove item',
-                                onPressed: () => _removeItem(entry.key),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                  Text(
-                    'Total: £${cart.totalPrice.toStringAsFixed(2)}',
-                    style: heading2,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Builder(
-                    builder: (BuildContext context) {
-                      final bool cartHasItems = cart.items.isNotEmpty;
-                      if (cartHasItems) {
-                        return StyledButton(
-                          onPressed: _navigateToCheckout,
-                          icon: Icons.payment,
-                          label: 'Checkout',
-                          backgroundColor: Colors.orange,
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  StyledButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icons.arrow_back,
-                    label: 'Back to Order',
-                    backgroundColor: Colors.grey,
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
     );
   }
 }
