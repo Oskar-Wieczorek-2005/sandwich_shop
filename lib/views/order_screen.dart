@@ -112,6 +112,7 @@ class _OrderScreenState extends State<OrderScreen> {
       context,
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
+          // Use provider-backed CartScreen (no explicit cart argument).
           return const CartScreen();
         },
       ),
