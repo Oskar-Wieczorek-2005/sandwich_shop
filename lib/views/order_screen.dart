@@ -5,6 +5,7 @@ import 'package:sandwich_shop/models/cart.dart';
 import 'package:sandwich_shop/models/sandwich.dart';
 import 'package:sandwich_shop/views/profile_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:sandwich_shop/views/styled_button.dart'; // <-- add this
 
 class OrderScreen extends StatefulWidget {
   final int maxQuantity;
@@ -110,8 +111,7 @@ class _OrderScreenState extends State<OrderScreen> {
       context,
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
-          final cart = Provider.of<Cart>(context, listen: false);
-          return CartScreen(cart: cart);
+          return const CartScreen();
         },
       ),
     );
@@ -296,45 +296,6 @@ class _OrderScreenState extends State<OrderScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class StyledButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-
-  final IconData icon;
-
-  final String label;
-
-  final Color backgroundColor;
-
-  const StyledButton({
-    super.key,
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-    required this.backgroundColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    ButtonStyle myButtonStyle = ElevatedButton.styleFrom(
-      backgroundColor: backgroundColor,
-      foregroundColor: Colors.white,
-      textStyle: normalText,
-    );
-
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: myButtonStyle,
-      child: Row(
-        children: [
-          Icon(icon),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
       ),
     );
   }
