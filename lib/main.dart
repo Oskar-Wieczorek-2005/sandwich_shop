@@ -7,6 +7,7 @@ void main() {
   runApp(const App());
 }
 
+// Root widget is kept simple so it can be reused from integration tests.
 class App extends StatelessWidget {
   const App({super.key});
 

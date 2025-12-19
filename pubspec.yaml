@@ -25,7 +25,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-
-flutter pub add json_annotation
-flutter pub add --dev build_runner
-flutter pub add --dev json_serializable
