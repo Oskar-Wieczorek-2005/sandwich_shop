@@ -13,31 +13,26 @@ void main() {
       app.main();
       await tester.pumpAndSettle();
 
-      // Test the initial state of the app (on the order screen)
       expect(find.text('Sandwich Counter'), findsOneWidget);
       expect(find.text('Cart: 0 items - £0.00'), findsOneWidget);
       expect(find.text('Veggie Delight'), findsWidgets);
 
       final addToCartButton =
           find.widgetWithText(ElevatedButton, 'Add to Cart');
-      await tester.ensureVisible(addToCartButton); // Scroll if needed
+      await tester.ensureVisible(addToCartButton);
       await tester.pumpAndSettle();
 
-      // Add a sandwich to the cart
       await tester.tap(addToCartButton);
       await tester.pumpAndSettle();
 
-      // Verify cart summary updated
       expect(find.text('Cart: 1 items - £11.00'), findsOneWidget);
 
-      // Find the View Cart button to navigate to the cart
       final viewCartButton = find.widgetWithText(ElevatedButton, 'View Cart');
       await tester.ensureVisible(viewCartButton);
       await tester.pumpAndSettle();
       await tester.tap(viewCartButton);
       await tester.pumpAndSettle();
 
-      // Verify that we're on the cart screen and the sandwich is there
       expect(find.text('Cart'), findsOneWidget);
       expect(find.text('Veggie Delight'), findsOneWidget);
       expect(find.text('Total: £11.00'), findsOneWidget);
@@ -81,9 +76,7 @@ void main() {
       final quantitySection = find.text('Quantity: ');
       expect(quantitySection, findsOneWidget);
 
-      // Find the + button that's near the quantity text
       final addButtons = find.byIcon(Icons.add);
-      // The + button should be the first one (before the cart + button)
       final quantityAddButton = addButtons.first;
 
       await tester.tap(quantityAddButton);
@@ -130,14 +123,121 @@ void main() {
       await tester.tap(confirmPaymentButton);
       await tester.pumpAndSettle();
 
-      // Wait for payment processing (2 seconds + buffer)
       await tester.pump(const Duration(seconds: 3));
 
-      // Should be back on order screen with empty cart
       expect(find.text('Sandwich Counter'), findsOneWidget);
       expect(find.text('Cart: 0 items - £0.00'), findsOneWidget);
     });
 
-    // Feel free to add more tests (e.g., to check saved orders, etc.)
+    testWidgets('maxQuantity is enforced and user sees validation feedback',
+        (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      final addButtons = find.byIcon(Icons.add);
+      final quantityAddButton = addButtons.first;
+
+      for (int i = 0; i < 10; i++) {
+        await tester.tap(quantityAddButton);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('5'), findsOneWidget);
+    });
+
+    testWidgets('user can remove items and see empty-cart state',
+        (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      final addToCartButton =
+          find.widgetWithText(ElevatedButton, 'Add to Cart');
+      await tester.tap(addToCartButton);
+      await tester.pumpAndSettle();
+
+      final viewCartButton = find.widgetWithText(ElevatedButton, 'View Cart');
+      await tester.tap(viewCartButton);
+      await tester.pumpAndSettle();
+
+      final removeButton = find.text('Remove');
+      expect(removeButton, findsOneWidget);
+      await tester.tap(removeButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your cart is empty'), findsOneWidget);
+      expect(find.text('Total: £0.00'), findsOneWidget);
+    });
+
+    testWidgets('updating quantities in cart updates totals',
+        (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      final addToCartButton =
+          find.widgetWithText(ElevatedButton, 'Add to Cart');
+      await tester.tap(addToCartButton);
+      await tester.pumpAndSettle();
+
+      final viewCartButton = find.widgetWithText(ElevatedButton, 'View Cart');
+      await tester.tap(viewCartButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Total: £11.00'), findsOneWidget);
+
+      final cartAddButtons = find.byIcon(Icons.add);
+      final cartItemAddButton = cartAddButtons.first;
+      await tester.tap(cartItemAddButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Total: £22.00'), findsOneWidget);
+    });
+
+    testWidgets('back navigation preserves cart contents',
+        (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      final addToCartButton =
+          find.widgetWithText(ElevatedButton, 'Add to Cart');
+      await tester.tap(addToCartButton);
+      await tester.pumpAndSettle();
+
+      final viewCartButton = find.widgetWithText(ElevatedButton, 'View Cart');
+      await tester.tap(viewCartButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cart'), findsOneWidget);
+      expect(find.text('Veggie Delight'), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sandwich Counter'), findsOneWidget);
+
+      await tester.tap(viewCartButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Veggie Delight'), findsOneWidget);
+      expect(find.text('Total: £11.00'), findsOneWidget);
+    });
+
+    testWidgets('restarting app clears cart (stateless behaviour)',
+        (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      final addToCartButton =
+          find.widgetWithText(ElevatedButton, 'Add to Cart');
+      await tester.tap(addToCartButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cart: 1 items - £11.00'), findsOneWidget);
+
+      app.main();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sandwich Counter'), findsOneWidget);
+      expect(find.text('Cart: 0 items - £0.00'), findsOneWidget);
+    });
   });
 }
