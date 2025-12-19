@@ -8,10 +8,16 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('end-to-end test', () {
+    // New shared setup: opens the app fresh before every test.
+    setUp(() async {
+      app.main();
+      // Give the app time to build the first frame.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+
     // Verifies adding the default sandwich to the cart and that it appears with the correct total.
     testWidgets('add a sandwich to the cart and verify it is in the cart',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       expect(find.text('Sandwich Counter'), findsOneWidget);
@@ -42,7 +48,6 @@ void main() {
     // Verifies that changing the sandwich type via the dropdown is reflected in the cart.
     testWidgets('change sandwich type and add to cart',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final sandwichDropdown = find.byType(DropdownMenu<SandwichType>);
@@ -73,7 +78,6 @@ void main() {
 
     // Verifies that increasing the quantity on the main screen affects the cart count and total.
     testWidgets('modify quantity and add to cart', (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final quantitySection = find.text('Quantity: ');
@@ -102,7 +106,6 @@ void main() {
 
     // Verifies the complete checkout flow and that the app resets the cart after payment.
     testWidgets('complete checkout flow', (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addToCartButton =
@@ -136,7 +139,6 @@ void main() {
     // Verifies that quantity cannot exceed maxQuantity and that the enforced value is shown.
     testWidgets('maxQuantity is enforced and user sees validation feedback',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addButtons = find.byIcon(Icons.add);
@@ -153,7 +155,6 @@ void main() {
     // Verifies that items can be removed from the cart and that the empty-cart UI is shown.
     testWidgets('user can remove items and see empty-cart state',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addToCartButton =
@@ -177,7 +178,6 @@ void main() {
     // Verifies that changing quantities in the cart updates the total price.
     testWidgets('updating quantities in cart updates totals',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addToCartButton =
@@ -202,7 +202,6 @@ void main() {
     // Verifies that navigating back from the cart preserves cart contents when reopening it.
     testWidgets('back navigation preserves cart contents',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addToCartButton =
@@ -232,7 +231,6 @@ void main() {
     // Verifies that restarting the app clears any existing cart state.
     testWidgets('restarting app clears cart (stateless behaviour)',
         (WidgetTester tester) async {
-      app.main();
       await tester.pumpAndSettle();
 
       final addToCartButton =
